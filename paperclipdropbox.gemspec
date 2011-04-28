@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Paul Ketelle"]
   s.email       = ["paul@ketelle.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/dripster82/paperclipdropbox"
   s.summary     = %q{Dropbox storage support for paperclip file attachment}
   s.description = %q{Dropbox storage support for paperclip file attachment}
   

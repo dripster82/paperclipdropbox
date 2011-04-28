@@ -14,6 +14,8 @@ Create the file config/paperclipdropbox.yml:
   development:
 	  dropbox_user: user_email
 	  dropbox_password: user_password
+	  dropbox_key: developer_app_key
+	  dropbox_secret: developer_app_secret
     
   test:
     ...
@@ -32,3 +34,7 @@ In your model:
   
   
 You can add the path option to the config/paperclipdropbox.yml file for ease of use.
+
+
+Till I have a production dropbox key/secret you will need to create your own via dropbox.
+The developer key will only allow access to the developers dropbox and nothing else.
