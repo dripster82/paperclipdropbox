@@ -4,7 +4,11 @@ module Paperclip
 			def self.extended(base)
 				require "dropbox"
 				base.instance_eval do
-					@options.merge!(YAML.load_file("#{Rails.root.to_s}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
+					
+					if File.exists?("#{RAILS_ROOT}/config/paperclipdropbox.yml")
+						@options.merge!(YAML.load_file("#{RAILS_ROOT}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
+					end
+					
 					@dropbox_user = @options[:dropbox_user]
 					@dropbox_password = @options[:dropbox_password]
 					@dropbox_key = @options[:dropbox_key]
@@ -20,7 +24,7 @@ module Paperclip
 			def exists?(style = default_style)
 				log("exists?  #{style}")
 				begin
-					dropbox_session.metadata(style)
+					dropbox_session.metadata("/Public#{File.dirname(path(style))}")
 					log("true")
 					true
 				rescue
@@ -35,8 +39,9 @@ module Paperclip
 			end
 
 			def flush_writes #:nodoc:
+				log("[paperclip] Writing files #{@queued_for_write.count}")
 				@queued_for_write.each do |style, file|
-					log("[paperclip] Writing files for /Public#{path(style)}")
+					log("[paperclip] Writing files for ")
 					file.close
 					dropbox_session.upload(file.path, "/Public#{File.dirname(path(style))}", :as=> File.basename(path(style)))
 				end
@@ -45,7 +50,7 @@ module Paperclip
 
 			def flush_deletes #:nodoc:
 				@queued_for_delete.each do |path|
-					log("[paperclip] Deleting files for #{path(style)}")
+					log("[paperclip] Deleting files for #{path}")
 					dropbox_session.rm("/Public/#{path}")
 				end
 				@queued_for_delete = []
