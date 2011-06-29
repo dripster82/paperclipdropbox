@@ -5,8 +5,8 @@ module Paperclip
 				require "dropbox"
 				base.instance_eval do
 					
-					if File.exists?("#{RAILS_ROOT}/config/paperclipdropbox.yml")
-						@options.merge!(YAML.load_file("#{RAILS_ROOT}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
+					if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
+						@options.merge!(YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
 					end
 					
 					@dropbox_user = @options[:dropbox_user]
