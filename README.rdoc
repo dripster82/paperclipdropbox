@@ -24,8 +24,8 @@ Or install it yourself as:
 Create the file config/paperclipdropbox.yml:
 
   development:
-	  dropbox_user: user_email
-	  dropbox_password: user_password
+	dropbox_user: user_email
+	dropbox_password: user_password
     
   test:
     ...
