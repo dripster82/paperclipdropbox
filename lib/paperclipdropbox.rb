@@ -60,24 +60,30 @@ module Paperclip
 				unless Rails.cache.exist?('DropboxSession:uid')
 					log("get Dropbox Session User_id")
 					Rails.cache.write('DropboxSession:uid', dropbox_session.account.uid)
+					dropbox_session.account.uid
+				else
+					log("read Dropbox User_id")
+					Rails.cache.read('DropboxSession:uid')
 				end
-				log("read Dropbox User_id")
-				Rails.cache.read('DropboxSession:uid')
 			end
 
 			private
 			def dropbox_session
 				unless Rails.cache.exist?('DropboxSession')
-					log("create new Dropbox Session")
-					dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
-					dropboxsession.mode = :dropbox
-					dropboxsession.authorizing_user = @dropbox_user
-					dropboxsession.authorizing_password = @dropbox_password
-					dropboxsession.authorize!
-					Rails.cache.write('DropboxSession', dropboxsession)
+					if @dropboxsession.blank?
+						log("create new Dropbox Session")
+						@dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
+						@dropboxsession.mode = :dropbox
+						@dropboxsession.authorizing_user = @dropbox_user
+						@dropboxsession.authorizing_password = @dropbox_password
+						@dropboxsession.authorize!
+						Rails.cache.write('DropboxSession', dropboxsession)
+					end
+					@dropboxsession
+				else
+					log("reading Dropbox Session")
+					Rails.cache.read('DropboxSession')
 				end
-				log("reading Dropbox Session")
-				Rails.cache.read('DropboxSession')
 			end
 		end
 	end
