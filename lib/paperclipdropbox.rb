@@ -1,3 +1,7 @@
+module Paperclipdropbox
+  require 'Paperclipdropbox/railtie' if defined?(Rails)
+end
+
 module Paperclip
 	module Storage
 		module Dropboxstorage
