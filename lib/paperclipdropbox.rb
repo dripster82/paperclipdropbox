@@ -74,6 +74,7 @@ module Paperclip
 						log("loading session from yaml");
 						if File.exists?("#{Rails.root}/config/dropboxsession.yml")
 							@dropboxsession = Dropbox::Session.deserialize(File.read("#{Rails.root}/config/dropboxsession.yml"))
+						end
 					end
 					@dropboxsession
 				else
