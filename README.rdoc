@@ -12,7 +12,7 @@ You can let bundler install Paperclip Dropbox Plugin by adding this line to your
 
 And then execute:
 
-  bundle install 
+  bundle install
 
 Or install it yourself as:
 
@@ -20,8 +20,8 @@ Or install it yourself as:
 
 Then run the authotization rake task
 
-	rake paperclipdropbox:authorize
-	
+  rake paperclipdropbox:authorize
+
 you'll then be given a url to login to dropbox to authorize this plugin access to your dropbox account.
 Then once logged in run the rake task again.
 
@@ -32,10 +32,10 @@ Create the file config/paperclipdropbox.yml:
   development:
     dropbox_user: user_email
     dropbox_password: user_password
-    
+
   test:
     ...
-    
+
   production:
     ...
 
@@ -47,6 +47,6 @@ In your model:
                       :storage => :Dropboxstorage,
                       :path => "/:attachment/:attachment/:id/:style/:filename"
   end
-  
-  
+
+
 You can add the path option to the config/paperclipdropbox.yml file for ease of use.
