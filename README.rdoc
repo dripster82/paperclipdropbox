@@ -18,6 +18,12 @@ Or install it yourself as:
 
   gem install paperclipdropbox
 
+Then run the authotization rake task
+
+	rake paperclipdropbox:authorize
+	
+you'll then be given a url to login to dropbox to authorize this plugin access to your dropbox account.
+Then once logged in run the rake task again.
 
 == Usage
 

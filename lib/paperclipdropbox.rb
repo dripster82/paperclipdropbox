@@ -71,13 +71,9 @@ module Paperclip
 			def dropbox_session
 				unless Rails.cache.exist?('DropboxSession')
 					if @dropboxsession.blank?
-						log("create new Dropbox Session")
-						@dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
-						@dropboxsession.mode = :dropbox
-						@dropboxsession.authorizing_user = @dropbox_user
-						@dropboxsession.authorizing_password = @dropbox_password
-						@dropboxsession.authorize!
-						Rails.cache.write('DropboxSession', dropboxsession)
+						log("loading session from yaml");
+						if File.exists?("#{Rails.root}/config/dropboxsession.yml")
+							@dropboxsession = Dropbox::Session.deserialize(File.read("#{Rails.root}/config/dropboxsession.yml"))
 					end
 					@dropboxsession
 				else
