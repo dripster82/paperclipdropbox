@@ -4,7 +4,7 @@ require "dropbox"
 namespace :paperclipdropbox do
 	
 
-	desc "Get User Authorise URL"
+	desc "Create DropBox Authorized Session Yaml"
 	task :authorize => :environment do
 		
 		SESSION_FILE = "#{Rails.root}/config/dropboxsession.yml"
@@ -24,6 +24,9 @@ namespace :paperclipdropbox do
 			@dropboxsession.authorizing_user = @dropbox_user
 			@dropboxsession.authorizing_password = @dropbox_password
 		end
+		puts ""
+		puts ""
+		puts ""
 		begin
 			@dropboxsession.authorize!
 			
@@ -36,7 +39,9 @@ namespace :paperclipdropbox do
 				puts "Already Authorized - #{@dropboxsession.authorized?}"
 			end
 		end
-		
+
+		puts ""
+		puts ""		
 		File.open(SESSION_FILE, "w") do |f|
 			f.puts @dropboxsession.serialize
 		end
