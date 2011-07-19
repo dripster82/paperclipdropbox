@@ -1,5 +1,5 @@
 module Paperclipdropbox
-  require 'Paperclipdropbox::Railtie' if defined?(Rails)
+  require 'paperclipdropbox/railtie' if defined?(Rails)
 end
 
 module Paperclip
