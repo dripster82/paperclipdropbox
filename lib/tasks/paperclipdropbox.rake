@@ -16,8 +16,8 @@ namespace :paperclipdropbox do
 			
 			@dropbox_user = @options[:dropbox_user]
 			@dropbox_password = @options[:dropbox_password]
-			@dropbox_key = '8ti7qntpcysl91j'
-			@dropbox_secret = 'i0tshr4cpd1pa4e'
+			@dropbox_key = @options[:dropbox_key] ||'8ti7qntpcysl91j'
+			@dropbox_secret = @options[:dropbox_secret] || 'i0tshr4cpd1pa4e'
 			
 			@dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
 			@dropboxsession.mode = :dropbox
@@ -28,7 +28,7 @@ namespace :paperclipdropbox do
 		puts ""
 		puts ""
 		begin
-			@dropboxsession.authorize!
+			@dropboxsession.authorize
 			
 			puts "Authorized - #{@dropboxsession.authorized?}"
 		rescue

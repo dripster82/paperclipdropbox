@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.email       = ["paul@ketelle.com"]
   s.homepage    = "https://github.com/dripster82/paperclipdropbox"
   s.summary     = %q{Dropbox storage support for paperclip file attachment}
-  s.description = %q{Dropbox storage support for paperclip file attachment}
+  s.description = %q{Adds Dropbox storage support for the Paperclip gem. Dropbox account required.}
   
   s.rubyforge_project = "paperclipdropbox"
   
