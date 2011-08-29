@@ -55,7 +55,10 @@ module Paperclip
 			def flush_deletes #:nodoc:
 				@queued_for_delete.each do |path|
 					log("[paperclip] Deleting files for #{path}")
-					dropbox_session.rm("/Public/#{path}")
+					begin
+						dropbox_session.rm("/Public/#{path}")
+					rescue
+					end
 				end
 				@queued_for_delete = []
 			end
