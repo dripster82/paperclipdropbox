@@ -82,7 +82,7 @@ module Paperclip
 							@dropboxsession = Dropbox::Session.deserialize(File.read("#{Rails.root}/config/dropboxsession.yml"))
 						end
 					end
-					@dropboxsession.mode = :dropbox
+					@dropboxsession.mode = :dropbox unless @dropboxsession.blank?
 					@dropboxsession
 				else
 					log("reading Dropbox Session") if respond_to?(:log)
