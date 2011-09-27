@@ -26,8 +26,6 @@ namespace :paperclipdropbox do
 
       puts "Visit #{@dropboxsession.authorize_url} to log in to Dropbox. Hit enter when you have done this."
 
-      $stdin.flush
-
       STDIN.gets
 
 		end
