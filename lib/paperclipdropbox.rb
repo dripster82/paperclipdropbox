@@ -11,16 +11,12 @@ module Paperclip
 				require "dropbox"
 				base.instance_eval do
 					
-					if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
-						@options.merge!(YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
-					end
-					
 					@dropbox_key = '8ti7qntpcysl91j'
 					@dropbox_secret = 'i0tshr4cpd1pa4e'
-					@dropbox_public_url = 'http://dl.dropbox.com/u/'
-					@options.merge!( :url => "#{@dropbox_public_url}#{user_id}#{@options[:path]}" )
-					@url = @options[:url]
-					@path = @options[:path]
+					@dropbox_public_url = "http://dl.dropbox.com/u/"
+					@options.url ="#{@dropbox_public_url}#{user_id}#{@options[:path]}"
+					@url = @options.url
+					@path = @options.path
 					log("Starting up DropBox Storage")
 				end
 			end
