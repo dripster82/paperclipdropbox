@@ -13,7 +13,6 @@ namespace :paperclipdropbox do
 	    puts ""
     	puts ""
     
-		unless @dropboxsession == Paperclip::Storage::Dropboxstorage.dropbox_session
 			if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
 				@options = (YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
 			end
@@ -27,8 +26,6 @@ namespace :paperclipdropbox do
 	      	puts "Visit #{@dropboxsession.authorize_url} to log in to Dropbox. Hit enter when you have done this."
 
 	      	STDIN.gets
-
-		end
 
 		begin
 			@dropboxsession.authorize
