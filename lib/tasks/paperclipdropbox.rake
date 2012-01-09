@@ -47,8 +47,10 @@ namespace :paperclipdropbox do
 
 		puts ""
 		puts ""
-		File.open(SESSION_FILE, "w") do |f|
-			f.puts @dropboxsession.serialize
+		unless @dropboxsession.blank?
+			File.open(SESSION_FILE, "w") do |f|
+				f.puts @dropboxsession.serialize
+			end
 		end
 	end
 
