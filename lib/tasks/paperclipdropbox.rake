@@ -12,6 +12,13 @@ namespace :paperclipdropbox do
 		puts ""
 		puts ""
 		puts ""
+		puts "@dropboxsession = [#{@dropboxsession}]"
+		puts "dropbox_session = [#{Paperclip::Storage::Dropboxstorage.dropbox_session}]"
+		puts "File Exists = [#{File.exists?("#{Rails.root}/config/paperclipdropbox.yml")}]"
+		puts ""
+		puts ""
+		puts ""
+		
 
 		unless @dropboxsession == Paperclip::Storage::Dropboxstorage.dropbox_session
 			if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
