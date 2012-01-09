@@ -20,7 +20,7 @@ namespace :paperclipdropbox do
 		puts ""
 
 
-		unless @dropboxsession == Paperclip::Storage::Dropboxstorage.dropbox_session || Paperclip::Storage::Dropboxstorage.dropbox_session.blank?
+		if @dropboxsession != Paperclip::Storage::Dropboxstorage.dropbox_session || Paperclip::Storage::Dropboxstorage.dropbox_session.blank?
 			if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
 				@options = (YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
 			end
