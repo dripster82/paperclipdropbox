@@ -12,15 +12,10 @@ namespace :paperclipdropbox do
 		puts ""
 		puts ""
 		puts ""
-		puts "@dropboxsession = [#{@dropboxsession}]"
-		puts "dropbox_session = [#{Paperclip::Storage::Dropboxstorage.dropbox_session}]"
-		puts "File Exists = [#{File.exists?("#{Rails.root}/config/paperclipdropbox.yml")}]"
-		puts ""
-		puts ""
-		puts ""
 
+		@dropboxsession = Paperclip::Storage::Dropboxstorage.dropbox_session
 
-		if @dropboxsession != Paperclip::Storage::Dropboxstorage.dropbox_session || Paperclip::Storage::Dropboxstorage.dropbox_session.blank?
+		if @dropboxsession.blank?
 			if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
 				@options = (YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
 			end
@@ -44,11 +39,16 @@ namespace :paperclipdropbox do
 		rescue
 			begin
 				puts ""
-				puts "Please login to dropbox using this link : #{@dropboxsession.authorize_url}"
-				puts "then run this rake task again."
+				puts "Visit #{@dropboxsession.authorize_url} to log in to Dropbox. Hit enter when you have done this."
+
+				STDIN.gets
+				@dropboxsession.authorize
+				puts ""
+				puts "Authorized - #{@dropboxsession.authorized?}"
 			rescue
 				puts ""
 				puts "Already Authorized - #{@dropboxsession.authorized?}" unless @dropboxsession.blank?
+				puts "Failed Authorization. Please try delete /config/dropboxsession.yml and try again." if @dropboxsession.blank?
 			end
 		end
 
