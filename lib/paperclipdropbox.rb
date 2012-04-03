@@ -14,9 +14,9 @@ module Paperclip
 					@dropbox_key = '8ti7qntpcysl91j'
 					@dropbox_secret = 'i0tshr4cpd1pa4e'
 					@dropbox_public_url = "http://dl.dropbox.com/u/"
-					@options.url ="#{@dropbox_public_url}#{user_id}#{@options.path}"
-					@url = @options.url
-					@path = @options.path
+					@options[:url] ="#{@dropbox_public_url}#{user_id}#{@options[:path]}"
+					@url = @options[:url]
+					@path = @options[:path]
 					log("Starting up DropBox Storage")
 				end
 			end
