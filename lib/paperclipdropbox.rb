@@ -14,9 +14,9 @@ module Paperclip
 					@dropbox_key = '8ti7qntpcysl91j'
 					@dropbox_secret = 'i0tshr4cpd1pa4e'
 					@dropbox_public_url = "http://dl.dropbox.com/u/"
-					@options.url ="#{@dropbox_public_url}#{user_id}#{@options.path}"
-					@url = @options.url
-					@path = @options.path
+					@options[:url] ="#{@dropbox_public_url}#{user_id}#{@options[:path]}"
+					@url = @options[:url]
+					@path = @options[:path]
 					log("Starting up DropBox Storage")
 				end
 			end
@@ -42,7 +42,8 @@ module Paperclip
 				log("[paperclip] Writing files #{@queued_for_write.count}")
 				@queued_for_write.each do |style, file|
 					log("[paperclip] Writing files for ") if respond_to?(:log)
-					file.close
+					# Error --> undefined method close for #<Paperclip::
+					# file.close
 					dropbox_session.upload(file.path, "/Public#{File.dirname(path(style))}", :as=> File.basename(path(style)))
 				end
 				@queued_for_write = {}
