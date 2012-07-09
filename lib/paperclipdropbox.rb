@@ -11,8 +11,9 @@ module Paperclip
 				require "dropbox"
 				base.instance_eval do
 					
-					@dropbox_key = '8ti7qntpcysl91j'
-					@dropbox_secret = 'i0tshr4cpd1pa4e'
+					@dropbox_key = @options[:dropbox_key] || '8ti7qntpcysl91j'
+					@dropbox_secret = @options[:dropbox_secret] || 'i0tshr4cpd1pa4e'
+
 					@dropbox_public_url = "http://dl.dropbox.com/u/"
 					@options[:url] ="#{@dropbox_public_url}#{user_id}#{@options[:path]}"
 					@url = @options[:url]

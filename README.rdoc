@@ -42,8 +42,8 @@ In your model:
 Create the file config/paperclipdropbox.yml:
 
   development:
-    dropbox_key: user_email
-    dropbox_secret: user_password
+    dropbox_key: dropbox_developer_key   <--- This are not required unless you are modding the gem
+    dropbox_secret: dropbox_developer_secret   <--- This are not required unless you are modding the gem
     path: "/:attachment/:attachment/:id/:style/:filename"
 
   test:
