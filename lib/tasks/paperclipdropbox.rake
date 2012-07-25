@@ -20,8 +20,8 @@ namespace :paperclipdropbox do
 				@options = (YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
 			end
 
-			@dropbox_key = @options.blank? ? '8ti7qntpcysl91j' : @options[:dropbox_key]
-			@dropbox_secret = @options.blank? ? 'i0tshr4cpd1pa4e' : @options[:dropbox_secret]
+			@dropbox_key = @options[:dropbox_key].blank? ? '8ti7qntpcysl91j' : @options[:dropbox_key]
+			@dropbox_secret = @options[:dropbox_secret].blank? ? 'i0tshr4cpd1pa4e' : @options[:dropbox_secret]
 
 			@dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
 			@dropboxsession.mode = :dropbox
