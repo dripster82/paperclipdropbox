@@ -2,90 +2,143 @@ module Paperclipdropbox
   require 'paperclipdropbox/railtie' if defined?(Rails)
 end
 
+require 'paperclipdropbox/url_generator'
+
 module Paperclip
 	module Storage
 		module Dropboxstorage
-    extend self
     
-			def self.extended(base)
-				require "dropbox"
-				base.instance_eval do
-					
-					@dropbox_key = @options[:dropbox_key] || '8ti7qntpcysl91j'
-					@dropbox_secret = @options[:dropbox_secret] || 'i0tshr4cpd1pa4e'
+			CONFIG_FILE = "/config/paperclipdropbox.yml"
 
-					@dropbox_public_url = "http://dl.dropbox.com/u/"
-					@options[:url] ="#{@dropbox_public_url}#{user_id}#{@options[:path]}"
-					@url = @options[:url]
-					@path = @options[:path]
-					log("Starting up DropBox Storage")
+			def self.extended(base)
+				require "dropbox_api"
+				base.instance_eval do
+					@options[:url_generator] = Paperclipdropbox::UrlGenerator
+					@url_generator = options[:url_generator].new(self)
+
+          unless @options[:url].to_s.match(/\A:dropdox.com\z/)
+						@options[:path] = @options[:path].gsub(/:url/, @options[:url]).gsub(/\A:rails_root\/public\/system\//, "")
+          	@options[:url]  = ":dropbox_file_url"
+          end
 				end
+
+        unless Paperclip::Interpolations.respond_to? :dropbox_file_url
+          Paperclip.interpolates(:dropbox_file_url) do |attachment, style|
+            attachment.public_url(style)
+          end
+        end
 			end
 
 			def exists?(style = default_style)
-				log("exists?  #{style}") if respond_to?(:log)
 				begin
-					dropbox_session.metadata("/Public#{File.dirname(path(style))}")
-					log("true") if respond_to?(:log)
+					dropbox_client.get_metadata("/#{path(style)}")
 					true
 				rescue
-					log("false") if respond_to?(:log)
 					false
 				end
 			end
 
-			def to_file(style=default_style)
-				log("to_file  #{style}") if respond_to?(:log)
-				return @queued_for_write[style] || "#{@dropbox_public_url}#{user_id}/#{path(style)}"
-			end
-
-			def flush_writes #:nodoc:
-				log("[paperclip] Writing files #{@queued_for_write.count}")
+			def flush_writes
+				share_urls = false
+				share_urls = {} unless @queued_for_write.empty?
 				@queued_for_write.each do |style, file|
-					log("[paperclip] Writing files for ") if respond_to?(:log)
-					# Error --> undefined method close for #<Paperclip::
-					# file.close
-					dropbox_session.upload(file.path, "/Public#{File.dirname(path(style))}", :as=> File.basename(path(style)))
-				end
-				@queued_for_write = {}
-			end
-
-			def flush_deletes #:nodoc:
-				@queued_for_delete.each do |path|
-					log("[paperclip] Deleting files for #{path}") if respond_to?(:log)
 					begin
-						dropbox_session.rm("/Public/#{path}")
+						dropbox_client.upload_by_chunks "/#{path(style)}", file
+						public_url(style)
 					rescue
 					end
 				end
+        
+        after_flush_writes # allows attachment to clean up temp files
+        @queued_for_write = {}
+			end
+
+			def flush_deletes
+				path_styles = styles.keys.push(:original).map {|val| "#{name}_#{val.to_s}"}
+
+				@queued_for_delete.each do |path|
+					begin
+						
+						dropbox_client.delete("/#{path}")
+					rescue
+					end
+				end
+
+				if self.instance.has_attribute?(:dropbox_share_ids) && !@queued_for_delete.empty?
+        	begin
+        		new_share_urls = JSON.parse(self.instance.dropbox_share_ids)
+        	rescue
+        		new_share_urls = {}
+        	end
+
+        	path_styles.each do |style|
+
+        		new_share_urls.delete(style)
+        	end
+
+				p new_share_urls
+				p @queued_for_delete
+				p self.instance.persisted?
+				p self.instance.frozen?
+				p self.instance.dropbox_share_ids.frozen?
+
+        	self.instance.update_column(:dropbox_share_ids, new_share_urls.to_json) if self.instance.persisted?
+        end
+
 				@queued_for_delete = []
 			end
 
-			def user_id
-				unless Rails.cache.exist?('DropboxSession:uid')
-					log("get Dropbox Session User_id")
-					Rails.cache.write('DropboxSession:uid', dropbox_session.account.uid)
-					dropbox_session.account.uid
-				else
-					log("read Dropbox User_id") if respond_to?(:log)
-					Rails.cache.read('DropboxSession:uid')
+			def public_url(style = default_style)
+				if self.instance.has_attribute?(:dropbox_share_ids)
+        	begin
+        		share_urls = JSON.parse(self.instance.dropbox_share_ids)
+        	rescue 
+        		share_urls = {}
+        	end
+
+        	return share_urls["#{name}_#{style}"] if share_urls.has_key?("#{name}_#{style}")
+        end
+
+				shared_link = @options[:default_url]
+				begin
+					shared_link = dropbox_client.list_shared_links(path: "/#{path(style)}").links.first.url
+				rescue
+					shared_link = dropbox_client.create_shared_link_with_settings("/#{path(style)}").url
 				end
+
+				begin
+	    		new_share_urls = JSON.parse(self.instance.dropbox_share_ids)
+	    	rescue
+	    		new_share_urls = {}
+	    	end
+	    	new_share_urls["#{name}_#{style}"] = shared_link
+	    	self.instance.update_column(:dropbox_share_ids, new_share_urls.to_json)
+
+				shared_link
 			end
 
-			def dropbox_session
-				unless Rails.cache.exist?('DropboxSession')
-					if @dropboxsession.blank?
-						log("loading session from yaml") if respond_to?(:log)
-						if File.exists?("#{Rails.root}/config/dropboxsession.yml")
-							@dropboxsession = Dropbox::Session.deserialize(File.read("#{Rails.root}/config/dropboxsession.yml"))
+			def dropbox_client
+					if @_dropbox_client.blank?
+						if File.exists?("#{Rails.root}#{CONFIG_FILE}")
+							dropbox_config = YAML.load_file("#{Rails.root}#{CONFIG_FILE}")
+							authenticator = DropboxApi::Authenticator.new(dropbox_config[:dropbox_key], dropbox_config[:dropbox_secret])
+							access_token = OAuth2::AccessToken.from_hash(authenticator, dropbox_config[:access_token])
+							@_dropbox_client = DropboxApi::Client.new(
+									access_token: access_token,
+	  							on_token_refreshed: lambda { |new_token_hash|
+	  								dropbox_config = YAML.load_file("#{Rails.root}#{CONFIG_FILE}")
+	  								dropbox_config[:access_token] = new_token_hash
+										File.open("#{Rails.root}#{CONFIG_FILE}",'w') do |h| 
+											h.write dropbox_config.to_yaml
+										end
+	  							}
+  							)
+						else
+							warn("#{CONFIG_FILE} does not exist\nEnsure you have authorise paperclipdropbox")
 						end
 					end
-					@dropboxsession.mode = :dropbox unless @dropboxsession.blank?
-					@dropboxsession
-				else
-					log("reading Dropbox Session") if respond_to?(:log)
-					Rails.cache.read('DropboxSession')
-				end
+				
+				@_dropbox_client
 			end
 		end
 	end
