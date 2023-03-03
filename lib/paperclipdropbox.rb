@@ -49,7 +49,7 @@ module Paperclip
 					end
 				end
         
-        after_flush_writes # allows attachment to clean up temp files
+        after_flush_writes
         @queued_for_write = {}
 			end
 
@@ -64,37 +64,38 @@ module Paperclip
 					end
 				end
 
-				if self.instance.has_attribute?(:dropbox_share_ids) && !@queued_for_delete.empty?
-        	begin
-        		new_share_urls = JSON.parse(self.instance.dropbox_share_ids)
-        	rescue
-        		new_share_urls = {}
-        	end
+				if has_dropbox_share_ids? && !@queued_for_delete.empty?
+        	new_share_urls = dropbox_share_ids
 
         	path_styles.each do |style|
-
         		new_share_urls.delete(style)
         	end
 
-				p new_share_urls
-				p @queued_for_delete
-				p self.instance.persisted?
-				p self.instance.frozen?
-				p self.instance.dropbox_share_ids.frozen?
-
-        	self.instance.update_column(:dropbox_share_ids, new_share_urls.to_json) if self.instance.persisted?
+        	update_dropbox_share_ids(new_share_urls.to_json)if self.instance.persisted?
         end
 
 				@queued_for_delete = []
 			end
 
-			def public_url(style = default_style)
-				if self.instance.has_attribute?(:dropbox_share_ids)
-        	begin
-        		share_urls = JSON.parse(self.instance.dropbox_share_ids)
-        	rescue 
-        		share_urls = {}
+			def dropbox_share_ids
+				begin
+        		JSON.parse(self.instance.dropbox_share_ids)
+        	rescue
+        		{}
         	end
+			end
+
+			def update_dropbox_share_ids(value)
+				self.instance.update_column(:dropbox_share_ids, value)
+			end
+
+			def has_dropbox_share_ids?
+				self.instance.has_attribute?(:dropbox_share_ids)
+			end
+
+			def public_url(style = default_style)
+				if has_dropbox_share_ids?
+        	share_urls = dropbox_share_ids
 
         	return share_urls["#{name}_#{style}"] if share_urls.has_key?("#{name}_#{style}")
         end
@@ -106,14 +107,12 @@ module Paperclip
 					shared_link = dropbox_client.create_shared_link_with_settings("/#{path(style)}").url
 				end
 
-				begin
-	    		new_share_urls = JSON.parse(self.instance.dropbox_share_ids)
-	    	rescue
-	    		new_share_urls = {}
-	    	end
-	    	new_share_urls["#{name}_#{style}"] = shared_link
-	    	self.instance.update_column(:dropbox_share_ids, new_share_urls.to_json)
+				if has_dropbox_share_ids?
+        	new_share_urls = dropbox_share_ids
 
+		    	new_share_urls["#{name}_#{style}"] = shared_link
+        	update_dropbox_share_ids(new_share_urls.to_json)
+		    end
 				shared_link
 			end
 
