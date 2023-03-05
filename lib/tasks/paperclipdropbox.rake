@@ -1,64 +1,56 @@
 require "yaml"
-require "dropbox"
+require "dropbox_api"
+require "paperclip"
+require "paperclipdropbox"
 
 namespace :paperclipdropbox do
 
+	desc "Authorize Paperclip link to your Dropbox"
+	task authorize: :environment do
 
-	desc "Create DropBox Authorized Session Yaml"
-	task :authorize => :environment do
-
-		SESSION_FILE = "#{Rails.root}/config/dropboxsession.yml"
-
+		config_file = Paperclip::Storage::Dropbox::CONFIG_FILE
 		puts ""
 		puts ""
 		puts ""
-
-		@dropboxsession = Paperclip::Storage::Dropboxstorage.dropbox_session
-
-		if @dropboxsession.blank?
-			if File.exists?("#{Rails.root}/config/paperclipdropbox.yml")
-				@options = (YAML.load_file("#{Rails.root}/config/paperclipdropbox.yml")[Rails.env].symbolize_keys)
-			end
-
-			@dropbox_key = @options[:dropbox_key].blank? ? '8ti7qntpcysl91j' : @options[:dropbox_key]
-			@dropbox_secret = @options[:dropbox_secret].blank? ? 'i0tshr4cpd1pa4e' : @options[:dropbox_secret]
-
-			@dropboxsession = Dropbox::Session.new(@dropbox_key, @dropbox_secret)
-			@dropboxsession.mode = :dropbox
-
-			puts "Visit #{@dropboxsession.authorize_url} to log in to Dropbox. Hit enter when you have done this."
-
-			STDIN.gets
-
-		end
 
 		begin
-			@dropboxsession.authorize
+			dropbox_key = '8ti7qntpcysl91j'
+			dropbox_secret = 'i0tshr4cpd1pa4e'
+
+			authenticator = DropboxApi::Authenticator.new(dropbox_key, dropbox_secret)
+			auth_url = authenticator.auth_code.authorize_url(token_access_type: 'offline')
+
 			puts ""
-			puts "Authorized - #{@dropboxsession.authorized?}"
-		rescue
-			begin
-				puts ""
-				puts "Visit #{@dropboxsession.authorize_url} to log in to Dropbox. Hit enter when you have done this."
+			puts "Please go to #{auth_url} and approve the app"
+			puts ""
+			puts "Please enter you access code"
+			access_code = gets.chomp
 
-				STDIN.gets
-				@dropboxsession.authorize
-				puts ""
-				puts "Authorized - #{@dropboxsession.authorized?}"
-			rescue
-				puts ""
-				puts "Already Authorized - #{@dropboxsession.authorized?}" unless @dropboxsession.blank?
-				puts "Failed Authorization. Please try delete /config/dropboxsession.yml and try again." if @dropboxsession.blank?
+			access_token = authenticator.auth_code.get_token(access_code)
+
+			if File.exists?("#{Rails.root}#{config_file}")
+				config = YAML.load_file("#{Rails.root}#{config_file}") 
+			else
+				config = {}
 			end
+			config[:dropbox_key] = dropbox_key
+			config[:dropbox_secret] = dropbox_secret
+			config[:access_token] = access_token.to_hash
+
+			File.open("#{Rails.root}#{config_file}",'w') do |h| 
+				h.write config.to_yaml
+			end
+			
+			puts ""
+			puts "Paperclip is now Authorized"
+
+		rescue => error
+			p error
+			puts "Failed Authorization. Please try again."
 		end
 
 		puts ""
 		puts ""
-		unless @dropboxsession.blank?
-			File.open(SESSION_FILE, "w") do |f|
-				f.puts @dropboxsession.serialize
-			end
-		end
 	end
 
 end

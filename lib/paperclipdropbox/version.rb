@@ -1,3 +1,3 @@
 module Paperclipdropbox
-  VERSION = "1.0.8"
+  VERSION = "2.0.0"
 end
