@@ -2,7 +2,8 @@ module Paperclipdropbox
   require 'paperclipdropbox/railtie' if defined?(Rails)
 end
 
-require 'net/http'
+require 'http'
+require "dropbox_api"
 
 module Paperclip
 	module Storage
@@ -11,11 +12,11 @@ module Paperclip
 			CONFIG_FILE = "/config/paperclipdropbox.yml"
 
 			def self.extended(base)
-				require "dropbox_api"
 				base.instance_eval do
 					@options[:escape_url] = false
+					app_folder = @options[:app_folder] || 'Paperclip_Dropbox/'
           unless @options[:url].to_s.match(/\A:dropdox.com\z/)
-						@options[:path] = @options[:path].gsub(/:url/, @options[:url]).gsub(/\A:rails_root\/public\/system\//, "")
+						@options[:path] = app_folder + @options[:path].gsub(/:url/, @options[:url]).gsub(/\A:rails_root\/public\/system\//, "")
           	@options[:url]  = ":dropbox_file_url"
           end
 				end
@@ -52,7 +53,7 @@ module Paperclip
 			end
 
 			def flush_deletes
-				path_styles = styles.keys.push(:original).map {|val| "#{name}_#{val.to_s}"}
+				path_styles = styles.keys.push(:original).map {|val| val.to_s}
 
 				@queued_for_delete.each do |path|
 					begin
@@ -66,7 +67,8 @@ module Paperclip
         	new_share_urls = dropbox_share_urls
 
         	path_styles.each do |style|
-        		new_share_urls.delete(style)
+        		Rails.cache.delete("#{@instance.class}_#{@instance.id}_#{name}_#{style}")
+        		new_share_urls.delete("#{name}_#{style}")
         	end
 
         	update_dropbox_share_urls(new_share_urls.to_json)if @instance.persisted?
@@ -76,18 +78,9 @@ module Paperclip
 			end
 
 			def public_url(style = default_style, size = 0)
-
-				p "can use cache url = #{can_use_cached_url?("#{name}_#{style}")}" 
 				return cached_url(style, size) if can_use_cached_url?("#{name}_#{style}") 
 
-				begin
-					shared_link = @options[:default_url]
-					shared_link = dropbox_client.list_shared_links(path: "/#{path(style)}").links.first.url+'&raw=1'
-				rescue
-					shared_link = dropbox_client.create_shared_link_with_settings("/#{path(style)}").url+'&raw=1'
-				end
-
-				shared_link = remove_redirects(shared_link, true) if shared_link != @options[:default_url] && size <= max_size
+				shared_link = dropbox_shared_link(style, size)
 
 				if has_dropbox_share_urls?
         	new_share_urls = dropbox_share_urls
@@ -100,26 +93,26 @@ module Paperclip
 
 			private
 
-			def remove_redirects(shared_link, return_last_redirect = false)
-				p "removing redirects"
-				last_url = URI.parse(shared_link)
-				new_url = URI.parse(shared_link)
+			def dropbox_shared_link(style = default_style, size = 0)
+				begin
+					shared_link = @options[:default_url]
+					shared_link = dropbox_client.list_shared_links(path: "/#{path(style)}").links.first.url.gsub("/s/", "/s/raw/")
+				rescue
+					shared_link = dropbox_client.create_shared_link_with_settings("/#{path(style)}").url.gsub("/s/", "/s/raw/")
+				end
+
+				shared_link
+			end
+
+			def remove_redirects(shared_link)
 				loop do 
-					new_url.host = last_url.host unless new_url.host
-					new_url.scheme = last_url.scheme unless new_url.scheme
-					shared_link = new_url.to_s
-					new_url = URI.parse(shared_link)
+					res = HTTP.get(shared_link)
 
-					res = Net::HTTP.get_response(new_url)
-
-					break unless res.is_a?(Net::HTTPRedirection)
-					last_url = new_url
-					new_url = URI.parse(res['location'])
+					break unless res.status == 302
+					shared_link = res['location']
 				end
 				
-				return last_url.to_s if	return_last_redirect
-				
-				new_url.to_s
+				shared_link
 			end
 
 			def dropbox_share_urls
@@ -147,9 +140,9 @@ module Paperclip
 					remove_url_redirects = @options['remove_url_redirects'] || false
 
 					if dropbox_share_urls.has_key?("#{name}_#{style}")
-						p " getting cache for #{name}_#{style}"
+						return dropbox_share_urls["#{name}_#{style}"] unless remove_url_redirects
+
 						return Rails.cache.fetch("#{@instance.class}_#{@instance.id}_#{name}_#{style}", expires_in: 3.hours) do
-							p "rebuilding cache for #{name}_#{style}"
 							shared_link = dropbox_share_urls["#{name}_#{style}"]
 							shared_link = remove_redirects(shared_link) if remove_url_redirects && size <= max_size
 
@@ -182,7 +175,7 @@ module Paperclip
 	  							}
   							)
 						else
-							warn("#{CONFIG_FILE} does not exist\nEnsure you have authorise paperclipdropbox")
+							warn("#{CONFIG_FILE} does not exist\nEnsure you have authorised paperclipdropbox")
 						end
 					end
 				
