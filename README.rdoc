@@ -38,20 +38,19 @@ In your model:
 
 == Optional
 
-additional attchement options are available
+=== App Folder
+This is the first folder in your dropbox before the paths take effect
 
-App Folder
-  This is the first folder in your dropbox before the paths take effect
-
-Usage
+==== Usage
   app_folder: "Rails_Super_App", # defaults to "Paperclip_Dropbox" if not passed
 
-Remove Url Redirects
-  This is a experimental.. the urls provided by Dropbox are redirecting urls. this adds additional time to the image load to the user.
-  this option will follow the redirect url and get the direct url to pass to the browser. 
+=== Remove Url Redirects
+This is a experimental.. the urls provided by Dropbox are redirecting urls. this adds additional time to the image load to the user.
+this option will follow the redirect url and get the direct url to pass to the browser. 
 
-  However this url will expire in 3-4 hours. The direct url is cached in Rails with a lifetime of 3 hours. at wich point it will retreive a new direct url to use. 
-  AGAIN EXPERIMENTAL so this can cause longer page loads when it needs to go and get the new direct url.
+However this url will expire in 3-4 hours. The direct url is cached in Rails with a lifetime of 3 hours. at wich point it will retreive a new direct url to use. 
 
-  Usage
+AGAIN EXPERIMENTAL so this can cause longer page loads when it needs to go and get the new direct url.
+
+==== Usage
     remove_url_redirects: true, # default is false
