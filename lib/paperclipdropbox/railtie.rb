@@ -1,5 +1,6 @@
 require 'paperclipdropbox'
 require 'rails'
+
 module Paperclipdropbox
   class Railtie < Rails::Railtie
 
