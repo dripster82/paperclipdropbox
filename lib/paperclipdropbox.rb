@@ -137,7 +137,7 @@ module Paperclip
 
 			def cached_url(style = default_style, size = 0)
 				if has_dropbox_share_urls?
-					remove_url_redirects = @options['remove_url_redirects'] || false
+					remove_url_redirects = @options[:remove_url_redirects] || false
 
 					if dropbox_share_urls.has_key?("#{name}_#{style}")
 						return dropbox_share_urls["#{name}_#{style}"] unless remove_url_redirects

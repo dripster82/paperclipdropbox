@@ -1,10 +1,8 @@
 = PaperclipDropboxStorage
 
-Dropbox storage support for paperclip file attachment plugin.
+Dropbox storage support for kt-paperclip file attachment plugin.
 
 == Install
-
-=== Rails 3
 
 You can let bundler install Paperclip Dropbox Plugin by adding this line to your application's Gemfile:
 
@@ -18,9 +16,9 @@ Or install it yourself as:
 
   gem install paperclipdropbox
 
-Then create the paperclipdropbox.yml file and run the authotization rake task
+Then run the authotization task
 
-  rake paperclipdropbox:authorize
+  rails paperclipdropbox:authorize
 
 you'll then be given a url to login to dropbox to authorize this plugin access to your dropbox account.
 
@@ -31,25 +29,29 @@ In your model:
 
   class User < ActiveRecord::Base
     has_attached_file :avatar,
-                      :styles => { :medium => "300x300>", :thumb => "100x100>" },
-                      :storage => :Dropboxstorage,
-                      :path => "/:attachment/:attachment/:id/:style/:filename"
+                      styles: { medium: "300x300>", thumb: "100x100>" }, 
+                      default_url: "/missing.png",
+                      storage: :Dropbox,
+                      path: ":class/:attachment/:style/:id_:filename"
   end
 
 
 == Optional
 
-Create the file config/paperclipdropbox.yml:
+additional attchement options are available
 
-  development:
-    dropbox_key: dropbox_developer_key   <--- This are not required unless you are modding the gem
-    dropbox_secret: dropbox_developer_secret   <--- This are not required unless you are modding the gem
-    path: "/:attachment/:attachment/:id/:style/:filename"
+App Folder
+  This is the first folder in your dropbox before the paths take effect
 
-  test:
-    ...
+Usage
+  app_folder: "Rails_Super_App", # defaults to "Paperclip_Dropbox" if not passed
 
-  production:
-    ...
+Remove Url Redirects
+  This is a experimental.. the urls provided by Dropbox are redirecting urls. this adds additional time to the image load to the user.
+  this option will follow the redirect url and get the direct url to pass to the browser. 
 
-You can add the path option to the config/paperclipdropbox.yml file for ease of use.
+  However this url will expire in 3-4 hours. The direct url is cached in Rails with a lifetime of 3 hours. at wich point it will retreive a new direct url to use. 
+  AGAIN EXPERIMENTAL so this can cause longer page loads when it needs to go and get the new direct url.
+
+  Usage
+    remove_url_redirects: true, # default is false
