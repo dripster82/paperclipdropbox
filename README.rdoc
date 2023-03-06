@@ -35,6 +35,13 @@ In your model:
                       path: ":class/:attachment/:style/:id_:filename"
   end
 
+Add a migration script to add the dropbox_share_urls column
+
+  class AddDropboxShareIdsToUsers < ActiveRecord::Migration[7.0]
+    def change
+      add_column :users, :dropbox_share_urls, :string, default: "{}", null: false
+    end
+  end
 
 == Optional
 
